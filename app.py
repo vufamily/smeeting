@@ -850,6 +850,7 @@ def start_processing():
 
 
 @app.route('/api/status/<job_id>')
+@approved_required
 def get_status(job_id):
     if job_id not in processing_jobs:
         return jsonify({'error': 'Job not found'}), 404
@@ -882,6 +883,7 @@ def get_status(job_id):
 
 
 @app.route('/api/result/<meeting_id>')
+@approved_required
 def get_result(meeting_id):
     if meeting_id not in meetings:
         return jsonify({'error': 'Meeting not found'}), 404
@@ -915,6 +917,7 @@ def get_result(meeting_id):
 
 
 @app.route('/api/meetings')
+@approved_required
 def get_meetings():
     meetings_list = []
     for m in meetings.values():
@@ -931,6 +934,7 @@ def get_meetings():
 
 
 @app.route('/api/meeting/<meeting_id>', methods=['GET'])
+@approved_required
 def get_meeting(meeting_id):
     if meeting_id not in meetings:
         return jsonify({'error': 'Meeting not found'}), 404
@@ -946,6 +950,7 @@ def get_meeting(meeting_id):
 
 
 @app.route('/api/meeting/<meeting_id>', methods=['DELETE'])
+@approved_required
 def delete_meeting(meeting_id):
     if meeting_id not in meetings:
         return jsonify({'error': 'Meeting not found'}), 404
@@ -963,6 +968,20 @@ def delete_meeting(meeting_id):
             del processing_jobs[job_id]
 
     return jsonify({'status': 'deleted'})
+
+
+@app.route('/api/auth/me')
+@login_required
+def get_current_user():
+    """Get current authenticated user info."""
+    return jsonify({
+        'id': current_user.id,
+        'username': current_user.username,
+        'email': current_user.email,
+        'full_name': current_user.full_name,
+        'role': current_user.role,
+        'status': current_user.status
+    })
 
 
 @app.route('/api/simulate-processing/<job_id>')
