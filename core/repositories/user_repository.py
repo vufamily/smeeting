@@ -55,3 +55,8 @@ class UserRepository(ABC):
     def update_password(self, user_id: int, password_hash: str) -> bool:
         """Update user password hash."""
         pass
+
+    @abstractmethod
+    def update_user(self, user: User) -> User:
+        """Update user entity (role, full_name only)."""
+        pass

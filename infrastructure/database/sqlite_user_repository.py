@@ -84,3 +84,10 @@ class SQLiteUserRepository(UserRepository):
             (password_hash, user_id)
         )
         return True
+
+    def update_user(self, user: User) -> User:
+        self.db.execute(
+            '''UPDATE users SET full_name=?, role=?, updated_at=CURRENT_TIMESTAMP WHERE id=?''',
+            (user.full_name, user.role.value if hasattr(user.role, 'value') else user.role, user.id)
+        )
+        return user
