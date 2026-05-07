@@ -110,14 +110,60 @@ backend/llm_service/
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE,
     password_hash TEXT NOT NULL,
     full_name TEXT,
-    email TEXT UNIQUE,
-    role TEXT DEFAULT 'user',          -- 'admin' | 'user'
+    role TEXT DEFAULT 'user',           -- 'admin' | 'user'
+    status TEXT DEFAULT 'pending',      -- 'pending' | 'approved' | 'rejected' | 'disabled'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+**User Status Flow:**
+1. User registers → `status = 'pending'` (cannot login)
+2. Admin approves → `status = 'approved'` (can login)
+3. Admin rejects → `status = 'rejected'` (cannot login)
+4. Admin disables → `status = 'disabled'` (cannot login)
+
+**Initial Admin:**
+- Username: `admin`
+- Password: `admin123`
+- Role: `admin`
+- Status: `approved`
+
+**Authentication:**
+- Uses Flask-Login for session management
+- Passwords hashed with bcrypt
+- Custom decorators: `@approved_required`, `@admin_required`
+
+### 2.6 Authentication (`app.py` - Auth Module)
+
+| Component | Technology | Mô tả |
+|---|---|---|
+| Session Management | Flask-Login | Handles user sessions, login/logout |
+| Password Hashing | bcrypt | Secure password storage |
+| Auth Decorators | Custom `@approved_required`, `@admin_required` | Route protection |
+| User Status | SQLite `status` field | Approval workflow |
+
+| Route | Method | Mô tả |
+|---|---|---|
+| `/auth/register` | GET/POST | User registration |
+| `/auth/login` | GET/POST | User login |
+| `/auth/logout` | GET | User logout |
+| `/admin/users` | GET | Admin user management panel |
+| `/admin/users/create` | POST | Admin creates user (auto-approved) |
+| `/admin/users/<id>/approve` | GET | Admin approves pending user |
+| `/admin/users/<id>/reject` | GET | Admin rejects user |
+| `/admin/users/<id>/disable` | GET | Admin disables user |
+| `/admin/users/<id>/enable` | GET | Admin re-enables user |
+| `/admin/users/<id>/delete` | GET | Admin deletes user |
+| `/admin/users/<id>/update` | POST | Admin updates user details |
+| `/admin/users/<id>/reset-password` | POST | Admin resets user password |
+| `/profile` | GET | User profile page |
+| `/profile/update` | POST | Update profile info |
+| `/profile/change-password` | POST | Change own password |
+
 
 ### Bảng `meetings`
 

@@ -39,10 +39,20 @@ Meeting Assistant là ứng dụng web nội bộ giúp đội ngũ làm việc 
 | ID | Requirement | Priority |
 |---|---|---|
 | FR-1.1 | Hệ thống cho phép đăng ký tài khoản mới (username, password, full name, email) | Must |
-| FR-1.2 | Hệ thống cho phép đăng nhập, trả về JWT token | Must |
-| FR-1.3 | JWT token có thời hạn 24h, được dùng cho tất cả API requests | Must |
-| FR-1.4 | Chỉ admin mới được quản lý users (thêm, xóa, phân quyền) | Must |
-| FR-1.5 | Users có thể xem và cập nhật profile của mình | Should |
+| FR-1.2 | User registration sets status to "pending" — user cannot login until approved | Must |
+| FR-1.3 | Admin có thể approve/reject/disable users | Must |
+| FR-1.4 | Hệ thống cho phép đăng nhập, session-based authentication | Must |
+| FR-1.5 | Nếu login thất bại do status = "pending": "Your account is pending approval. Please contact administrator." | Must |
+| FR-1.6 | Nếu login thất bại do status = "rejected": "Your account has been rejected. Please contact administrator." | Must |
+| FR-1.7 | Nếu login thất bại do status = "disabled": "Your account has been disabled. Please contact administrator." | Must |
+| FR-1.8 | Chỉ admin mới được quản lý users (thêm, xóa, phân quyền) | Must |
+| FR-1.9 | Users có thể xem và cập nhật profile của mình | Must |
+| FR-1.10 | Users có thể đổi password của chính mình | Must |
+| FR-1.11 | Default admin user: username="admin", password="admin123", role="admin", status="approved" | Must |
+| FR-1.12 | Passwords hashed bằng bcrypt | Must |
+| FR-8.1 | All protected routes require approved user status via `@approved_required` decorator | Must |
+| FR-8.2 | Admin routes require admin role via `@admin_required` decorator | Must |
+
 
 ### Meeting Management
 
