@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Assistant - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🎙️</span>
+                    <h1>Meeting Assistant</h1>
+                </div>
+                <p class="tagline">Record, transcribe, and summarize your meetings automatically</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="card upload-section">
+                <div class="card-header">
+                    <h2>📤 Upload Audio</h2>
+                    <p>Upload a pre-recorded meeting audio file</p>
+                </div>
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📁</div>
+                    <p class="upload-text">Drag & drop your audio file here</p>
+                    <p class="upload-formats">Supports MP3, WAV, M4A, FLAC, WEBM</p>
+                    <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.webm,.ogg,.mp4" hidden>
+                    <button class="btn btn-secondary" id="browseBtn">Browse Files</button>
+                </div>
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="uploadProgressBar"></div>
+                    </div>
+                    <p class="progress-text" id="uploadProgressText">Uploading...</p>
+                </div>
+            </section>
+
+            <!-- Record Section -->
+            <section class="card record-section">
+                <div class="card-header">
+                    <h2>🎤 Record Audio</h2>
+                    <p>Record directly from your microphone</p>
+                </div>
+                <div class="recorder-controls">
+                    <button class="btn btn-record" id="recordBtn">
+                        <span class="record-icon">⏺️</span>
+                        <span id="recordBtnText">Start Recording</span>
+                    </button>
+                    <div class="recording-timer" id="recordingTimer">
+                        <span class="timer-display">00:00</span>
+                    </div>
+                </div>
+                <div class="waveform-container" id="waveformContainer">
+                    <canvas id="waveformCanvas"></canvas>
+                </div>
+                <div class="recording-status" id="recordingStatus"></div>
+            </section>
+
+            <!-- Recent Meetings Section -->
+            <section class="card meetings-section">
+                <div class="card-header">
+                    <h2>📋 Recent Meetings</h2>
+                    <p>Your processed meeting recordings</p>
+                </div>
+                <div class="meetings-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalMeetings">0</span>
+                        <span class="stat-label">Total Meetings</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalDuration">0h</span>
+                        <span class="stat-label">Total Duration</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="pendingCount">0</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+                <div class="meetings-list" id="meetingsList">
+                    <div class="empty-state">
+                        <p>No meetings yet. Upload or record your first meeting!</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notification -->
+        <div class="toast" id="toast">
+            <span class="toast-message" id="toastMessage"></span>
+        </div>
+    </div>
+
+    <script src="/static/js/recorder.js"></script>
+    <script>
+        // Global state
+        let currentMeetingId = null;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let analyser = null;
+        let recordedChunks = [];
+        let recordingStartTime = null;
+        let timerInterval = null;
+        let audioStream = null;
+
+        // DOM Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const recordingTimer = document.getElementById('recordingTimer');
+        const waveformCanvas = document.getElementById('waveformCanvas');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const meetingsList = document.getElementById('meetingsList');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            toastMessage.textContent = message;
+            toast.className = `toast toast-${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // File Upload Handlers
+        browseBtn.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await uploadFile(file);
+            }
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                await uploadFile(file);
+            }
+        });
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('audio', file);
+
+            document.getElementById('uploadProgress').style.display = 'block';
+            browseBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showToast('File uploaded successfully!', 'success');
+                    currentMeetingId = result.meeting_id;
+                    // Redirect to processing page
+                    window.location.href = `/process/${result.meeting_id}`;
+                } else {
+                    showToast(result.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showToast('Upload failed: ' + error.message, 'error');
+            } finally {
+                browseBtn.disabled = false;
+                document.getElementById('uploadProgress').style.display = 'none';
+            }
+        }
+
+        // Audio Recording
+        recordBtn.addEventListener('click', toggleRecording);
+
+        async function toggleRecording() {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(audioStream);
+                recordedChunks = [];
+
+                // Setup audio visualization
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(audioStream);
+                source.connect(analyser);
+                analyser.fftSize = 256;
+
+                drawWaveform();
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    await saveRecording(blob);
+                };
+
+                mediaRecorder.start();
+                recordingStartTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+
+                recordBtn.classList.add('recording');
+                document.getElementById('recordBtnText').textContent = 'Stop Recording';
+                recordingStatus.textContent = 'Recording in progress...';
+
+            } catch (error) {
+                showToast('Microphone access denied', 'error');
+                console.error('Recording error:', error);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                audioStream.getTracks().forEach(track => track.stop());
+                clearInterval(timerInterval);
+                recordBtn.classList.remove('recording');
+                document.getElementById('recordBtnText').textContent = 'Start Recording';
+                recordingStatus.textContent = 'Processing recording...';
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.querySelector('.timer-display').textContent = `${minutes}:${seconds}`;
+        }
+
+        function drawWaveform() {
+            if (!analyser) return;
+
+            const canvas = waveformCanvas;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width = canvas.offsetWidth;
+            const height = canvas.height = canvas.offsetHeight;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+
+                analyser.getByteTimeDomainData(dataArray);
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = recordBtn.classList.contains('recording') ? '#ef4444' : '#6366f1';
+                ctx.beginPath();
+
+                const sliceWidth = width / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = (v * height) / 2;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
+                }
+
+                ctx.lineTo(width, height / 2);
+                ctx.stroke();
+            }
+
+            draw();
+        }
+
+        async function saveRecording(blob) {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64 = reader.result.split(',')[1];
+
+                try {
+                    const response = await fetch('/api/record', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ audio_data: base64, format: 'webm' })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showToast('Recording saved!', 'success');
+                        window.location.href = `/process/${result.meeting_id}`;
+                    } else {
+                        showToast(result.error || 'Save failed', 'error');
+                    }
+                } catch (error) {
+                    showToast('Save failed: ' + error.message, 'error');
+                }
+            };
+            reader.readAsDataURL(blob);
+        }
+
+        // Load meetings list
+        async function loadMeetings() {
+            try {
+                const response = await fetch('/api/meetings');
+                const result = await response.json();
+
+                if (result.meetings && result.meetings.length > 0) {
+                    renderMeetings(result.meetings);
+                }
+            } catch (error) {
+                console.error('Failed to load meetings:', error);
+            }
+        }
+
+        function renderMeetings(meetings) {
+            const totalMeetings = meetings.length;
+            let totalSeconds = meetings.length * 1800; // Approximate 30 min per meeting
+            let pending = meetings.filter(m => m.status === 'uploaded' || m.status === 'processing').length;
+
+            document.getElementById('totalMeetings').textContent = totalMeetings;
+            document.getElementById('totalDuration').textContent = `${Math.floor(totalSeconds / 3600)}h`;
+            document.getElementById('pendingCount').textContent = pending;
+
+            meetingsList.innerHTML = meetings.map(meeting => `
+                <div class="meeting-item" data-id="${meeting.id}">
+                    <div class="meeting-icon">🎙️</div>
+                    <div class="meeting-info">
+                        <h4>${escapeHtml(meeting.name)}</h4>
+                        <p class="meeting-date">${formatDate(meeting.created_at)}</p>
+                    </div>
+                    <div class="meeting-status status-${meeting.status}">
+                        ${meeting.status}
+                    </div>
+                    <div class="meeting-actions">
+                        ${meeting.status === 'complete' ? 
+                            `<a href="/result/${meeting.id}" class="btn btn-small">View Results</a>` :
+                            meeting.status === 'processing' ? 
+                                `<a href="/process/${meeting.id}" class="btn btn-small">View Progress</a>` :
+                                `<a href="/process/${meeting.id}" class="btn btn-small">Process</a>`
+                        }
+                        <button class="btn btn-small btn-danger" onclick="deleteMeeting('${meeting.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteMeeting(meetingId) {
+            if (!confirm('Are you sure you want to delete this meeting?')) return;
+
+            try {
+                const response = await fetch(`/api/meeting/${meetingId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('Meeting deleted', 'success');
+                    loadMeetings();
+                } else {
+                    showToast('Delete failed', 'error');
+                }
+            } catch (error) {
+                showToast('Delete failed: ' + error.message, 'error');
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Initialize
+        loadMeetings();
+    </script>
+</body>
+</html>

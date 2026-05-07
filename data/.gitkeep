@@ -1,0 +1,11 @@
+# Meeting Assistant - Data Storage
+
+This directory contains uploaded audio files, processed outputs, and temporary files.
+
+## Structure
+
+- `uploads/` - Original uploaded audio files
+- `outputs/` - Processed results (minutes, transcriptions)
+- `separated/` - Demucs source separation outputs
+- `segments/` - Audio segment files
+- `temp/` - Temporary processing files

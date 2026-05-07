@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing - Meeting Assistant</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🎙️</span>
+                    <h1>Meeting Assistant</h1>
+                </div>
+                <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <section class="card processing-section">
+                <div class="card-header">
+                    <h2 id="meetingTitle">Processing Meeting</h2>
+                    <p id="meetingSubtitle">Please wait while we process your audio...</p>
+                </div>
+
+                <!-- Audio Player Preview -->
+                <div class="audio-preview">
+                    <audio id="audioPlayer" controls>
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+
+                <!-- Processing Steps -->
+                <div class="processing-steps">
+                    <div class="step" id="step-upload">
+                        <div class="step-icon">📤</div>
+                        <div class="step-info">
+                            <span class="step-name">Upload</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-validate">
+                        <div class="step-icon">✅</div>
+                        <div class="step-info">
+                            <span class="step-name">Validation</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-transcribe">
+                        <div class="step-icon">🎯</div>
+                        <div class="step-info">
+                            <span class="step-name">Transcription</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-speakers">
+                        <div class="step-icon">👥</div>
+                        <div class="step-info">
+                            <span class="step-name">Speaker Detection</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-decisions">
+                        <div class="step-icon">📋</div>
+                        <div class="step-info">
+                            <span class="step-name">Extract Decisions</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-tasks">
+                        <div class="step-icon">✅</div>
+                        <div class="step-info">
+                            <span class="step-name">Extract Tasks</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-summary">
+                        <div class="step-icon">📝</div>
+                        <div class="step-info">
+                            <span class="step-name">Generate Summary</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step" id="step-complete">
+                        <div class="step-icon">🎉</div>
+                        <div class="step-info">
+                            <span class="step-name">Complete</span>
+                            <span class="step-status">Waiting...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overall Progress -->
+                <div class="overall-progress">
+                    <div class="progress-info">
+                        <span>Overall Progress</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                    </div>
+                    <p class="current-step-text" id="currentStepText">Preparing...</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="processing-actions">
+                    <button class="btn btn-primary" id="viewResultsBtn" style="display: none;" onclick="viewResults()">
+                        View Results →
+                    </button>
+                    <button class="btn btn-secondary" onclick="cancelProcessing()">
+                        Cancel
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/processor.js"></script>
+    <script>
+        // Get meeting ID from URL
+        const meetingId = window.location.pathname.split('/').pop();
+        let jobId = null;
+        let processingInterval = null;
+
+        // Initialize processor
+        const processor = new MeetingProcessor(meetingId);
+        
+        processor.onStatusUpdate = function(status) {
+            updateUI(status);
+        };
+
+        processor.onComplete = function(result) {
+            document.getElementById('viewResultsBtn').style.display = 'inline-block';
+            clearInterval(processingInterval);
+        };
+
+        processor.onError = function(error) {
+            alert('Processing error: ' + error);
+        };
+
+        // Start processing
+        async function startProcessing() {
+            const result = await processor.startProcessing();
+            if (result.job_id) {
+                jobId = result.job_id;
+                document.getElementById('meetingTitle').textContent = result.meeting_name || 'Processing Meeting';
+                
+                // Setup audio player
+                if (result.audio_file) {
+                    document.getElementById('audioPlayer').src = '/uploads/' + result.audio_file.split('/').pop();
+                }
+                
+                // Start polling for status
+                processingInterval = setInterval(async () => {
+                    const status = await processor.checkStatus(jobId);
+                    if (status) {
+                        updateUI(status);
+                        
+                        if (status.status === 'complete') {
+                            document.getElementById('viewResultsBtn').style.display = 'inline-block';
+                            clearInterval(processingInterval);
+                        } else if (status.status === 'error') {
+                            alert('Processing failed: ' + (status.error || 'Unknown error'));
+                            clearInterval(processingInterval);
+                        }
+                    }
+                }, 2000);
+            }
+        }
+
+        function updateUI(status) {
+            // Update progress bar
+            document.getElementById('progressFill').style.width = status.progress + '%';
+            document.getElementById('progressPercent').textContent = status.progress + '%';
+            document.getElementById('currentStepText').textContent = 'Current: ' + formatStepName(status.step);
+
+            // Update step indicators
+            const stepMap = {
+                'upload': 'step-upload',
+                'validate': 'step-validate',
+                'transcribe': 'step-transcribe',
+                'speakers': 'step-speakers',
+                'decisions': 'step-decisions',
+                'tasks': 'step-tasks',
+                'summary': 'step-summary',
+                'complete': 'step-complete'
+            };
+
+            // Reset all steps
+            Object.values(stepMap).forEach(stepId => {
+                const step = document.getElementById(stepId);
+                step.classList.remove('active', 'complete');
+            });
+
+            // Mark completed steps
+            const stepOrder = ['upload', 'validate', 'transcribe', 'speakers', 'decisions', 'tasks', 'summary', 'complete'];
+            const currentIdx = stepOrder.indexOf(status.step);
+
+            for (let i = 0; i < currentIdx; i++) {
+                const stepEl = document.getElementById(stepMap[stepOrder[i]]);
+                stepEl.classList.add('complete');
+                stepEl.querySelector('.step-status').textContent = 'Complete';
+            }
+
+            // Mark current step
+            if (status.step && stepMap[status.step]) {
+                const currentStep = document.getElementById(stepMap[status.step]);
+                currentStep.classList.add('active');
+                currentStep.querySelector('.step-status').textContent = 'Processing...';
+            }
+        }
+
+        function formatStepName(step) {
+            const names = {
+                'upload': 'Uploading audio file',
+                'validate': 'Validating audio format',
+                'transcribe': 'Converting speech to text',
+                'speakers': 'Identifying speakers',
+                'decisions': 'Extracting key decisions',
+                'tasks': 'Identifying action items',
+                'summary': 'Generating meeting summary',
+                'complete': 'Processing complete'
+            };
+            return names[step] || step;
+        }
+
+        function viewResults() {
+            window.location.href = `/result/${meetingId}`;
+        }
+
+        function cancelProcessing() {
+            if (confirm('Are you sure you want to cancel processing?')) {
+                window.location.href = '/';
+            }
+        }
+
+        // Auto-start processing on page load
+        startProcessing();
+    </script>
+</body>
+</html>

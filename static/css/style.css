@@ -1,0 +1,834 @@
+/* Meeting Assistant - Main Stylesheet */
+
+/* CSS Variables */
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #a5b4fc;
+    --secondary: #64748b;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --border-radius: 12px;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: var(--gray-800);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius);
+    padding: 20px 30px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 2rem;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    color: var(--gray-800);
+    font-weight: 700;
+}
+
+.tagline {
+    color: var(--gray-500);
+    font-size: 0.95rem;
+    margin-top: 4px;
+}
+
+/* Main Content */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cards */
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+}
+
+.card-header {
+    margin-bottom: 20px;
+}
+
+.card-header h2 {
+    font-size: 1.25rem;
+    color: var(--gray-800);
+    margin-bottom: 4px;
+}
+
+.card-header p {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-200);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Upload Zone */
+.upload-zone {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: 40px 20px;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.upload-zone:hover {
+    border-color: var(--primary);
+    background: var(--gray-50);
+}
+
+.upload-zone.dragover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+.upload-text {
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.upload-formats {
+    color: var(--gray-400);
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+/* Upload Progress */
+.upload-progress {
+    margin-top: 20px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.progress-text {
+    text-align: center;
+    margin-top: 8px;
+    color: var(--gray-500);
+    font-size: 0.9rem;
+}
+
+/* Recorder */
+.recorder-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.btn-record {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    border: 3px solid var(--gray-300);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-record:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.btn-record.recording {
+    background: var(--danger);
+    border-color: var(--danger);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.recording-timer {
+    display: none;
+}
+
+.recording-timer.active {
+    display: block;
+}
+
+.timer-display {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-700);
+    font-variant-numeric: tabular-nums;
+}
+
+.waveform-container {
+    height: 80px;
+    background: var(--gray-50);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+#waveformCanvas {
+    width: 100%;
+    height: 100%;
+}
+
+.recording-status {
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 0.9rem;
+}
+
+/* Meetings Section */
+.meetings-section {
+    grid-column: 1 / -1;
+}
+
+.meetings-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    color: var(--gray-500);
+    font-size: 0.85rem;
+}
+
+.meetings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.meeting-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.meeting-item:hover {
+    background: var(--gray-100);
+}
+
+.meeting-icon {
+    font-size: 2rem;
+}
+
+.meeting-info {
+    flex: 1;
+}
+
+.meeting-info h4 {
+    color: var(--gray-800);
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.meeting-date {
+    color: var(--gray-500);
+    font-size: 0.85rem;
+}
+
+.meeting-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-uploaded { background: var(--gray-200); color: var(--gray-600); }
+.status-processing { background: var(--warning); color: white; }
+.status-complete { background: var(--success); color: white; }
+.status-error { background: var(--danger); color: white; }
+
+.meeting-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray-500);
+}
+
+/* Processing Page */
+.processing-section {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.audio-preview {
+    margin-bottom: 24px;
+}
+
+.audio-preview audio {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.processing-steps {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 32px;
+    padding: 20px 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+.step.complete {
+    opacity: 0.6;
+}
+
+.step.active {
+    background: var(--primary-light);
+}
+
+.step-icon {
+    font-size: 2rem;
+}
+
+.step-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.step-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.step-status {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.step-connector {
+    width: 20px;
+    height: 2px;
+    background: var(--gray-300);
+    margin-top: 30px;
+    display: none;
+}
+
+.overall-progress {
+    background: var(--gray-50);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.current-step-text {
+    text-align: center;
+    color: var(--gray-500);
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
+.processing-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* Results Page */
+.meeting-info {
+    margin-bottom: 24px;
+}
+
+.meeting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.meeting-details h2 {
+    font-size: 1.5rem;
+    color: var(--gray-800);
+}
+
+.meeting-meta {
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--gray-200);
+    padding-bottom: 12px;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--gray-700);
+    background: var(--gray-100);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    margin-bottom: -14px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Transcript */
+.transcript-container {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.transcript-segment {
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.segment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.segment-speaker {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.segment-time {
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+.segment-text {
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+/* Decisions */
+.decisions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.decision-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+}
+
+.decision-icon {
+    font-size: 1.5rem;
+}
+
+.decision-content {
+    flex: 1;
+}
+
+.decision-text {
+    color: var(--gray-800);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.decision-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+/* Tasks */
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: 8px;
+}
+
+.task-checkbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.task-checkbox input {
+    opacity: 0;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border: 2px solid var(--gray-300);
+    border-radius: 6px;
+    pointer-events: none;
+}
+
+.task-checkbox input:checked + .checkmark {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.task-checkbox input:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+}
+
+.task-content {
+    flex: 1;
+}
+
+.task-text {
+    color: var(--gray-800);
+    margin-bottom: 8px;
+}
+
+.task-text.completed {
+    text-decoration: line-through;
+    color: var(--gray-500);
+}
+
+.task-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+/* Summary */
+.summary-container {
+    background: var(--gray-50);
+    padding: 24px;
+    border-radius: 8px;
+}
+
+.summary-content h3 {
+    color: var(--gray-800);
+    margin: 16px 0 8px;
+}
+
+.summary-content h4 {
+    color: var(--gray-700);
+    margin: 12px 0 8px;
+}
+
+.summary-content p {
+    color: var(--gray-700);
+    line-height: 1.8;
+}
+
+.summary-content li {
+    margin-left: 24px;
+    color: var(--gray-700);
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--gray-800);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-success { background: var(--success); }
+.toast-error { background: var(--danger); }
+.toast-warning { background: var(--warning); }
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray-500);
+}
+
+/* Icon Button */
+.btn-icon {
+    background: none;
+    border: 1px solid var(--gray-300);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-400);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 12px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .meetings-stats {
+        flex-wrap: wrap;
+    }
+    
+    .tabs {
+        gap: 4px;
+    }
+    
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .processing-steps {
+        gap: 4px;
+    }
+    
+    .step {
+        min-width: 70px;
+        padding: 8px;
+    }
+    
+    .step-icon {
+        font-size: 1.5rem;
+    }
+    
+    .step-name {
+        font-size: 0.75rem;
+    }
+}

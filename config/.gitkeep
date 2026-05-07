@@ -1,0 +1,7 @@
+# Meeting Assistant - Configuration Files
+
+This directory contains configuration for the AI pipeline.
+
+## Files
+
+- `config.py` - Main configuration for all AI components
