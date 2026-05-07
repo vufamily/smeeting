@@ -29,9 +29,11 @@
 
                 <!-- Audio Player Preview -->
                 <div class="audio-preview">
+                    <h3>🎧 Listen to your recording</h3>
                     <audio id="audioPlayer" controls>
                         Your browser does not support the audio element.
                     </audio>
+                    <p id="audioStatus" class="audio-status">Loading audio...</p>
                 </div>
 
                 <!-- Processing Steps -->
@@ -149,6 +151,32 @@
             alert('Processing error: ' + error);
         };
 
+        // Setup audio player
+        async function setupAudioPlayer() {
+            try {
+                const response = await fetch(`/api/meeting/${meetingId}`);
+                if (response.ok) {
+                    const meeting = await response.json();
+                // audio_file stored as "uploads/xxx.webm", extract just the filename
+                const audioPath = meeting.audio_file || '';
+                const filename = audioPath.split('/').pop();
+                if (filename) {
+                    audioPlayer.src = filename;
+                    audioPlayer.load();
+                    audioPlayer.style.opacity = '1';
+                    document.getElementById('audioStatus').textContent = 'Ready to play - ' + filename;
+                    document.getElementById('audioStatus').style.color = '#10b981';
+                } else {
+                    document.getElementById('audioStatus').textContent = 'No audio file available';
+                    audioPlayer.style.opacity = '0.5';
+                }
+                }
+            } catch (e) {
+                console.error('Error loading audio:', e);
+                document.getElementById('audioStatus').textContent = 'Could not load audio';
+            }
+        }
+
         // Start processing
         async function startProcessing() {
             const result = await processor.startProcessing();
@@ -156,10 +184,13 @@
                 jobId = result.job_id;
                 document.getElementById('meetingTitle').textContent = result.meeting_name || 'Processing Meeting';
                 
-                // Setup audio player
-                if (result.audio_file) {
-                    document.getElementById('audioPlayer').src = '/uploads/' + result.audio_file.split('/').pop();
+                // Audio file stored as "uploads/xxx.webm", construct proper URL
+                const filename = result.audio_file.split('/').pop();
+                if (filename) {
+                    document.getElementById('audioPlayer').src = '/' + filename;
+                    document.getElementById('audioPlayer').style.opacity = '1';
                 }
+                
                 
                 // Start polling for status
                 processingInterval = setInterval(async () => {

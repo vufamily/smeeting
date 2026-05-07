@@ -832,3 +832,51 @@ body {
         font-size: 0.75rem;
     }
 }
+
+/* Segment Play Button */
+.segment-play-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.segment-play-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.segment-play-btn.playing {
+    background: var(--success);
+}
+
+.segment-play-btn:disabled {
+    background: var(--gray-300);
+    cursor: not-allowed;
+}
+
+/* Audio Player for Results */
+.results-audio-player {
+    background: var(--gray-50);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.results-audio-player h4 {
+    margin-bottom: 8px;
+    color: var(--gray-700);
+}
+
+.results-audio-player audio {
+    width: 100%;
+    border-radius: 8px;
+}

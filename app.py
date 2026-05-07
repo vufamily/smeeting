@@ -220,7 +220,8 @@ def start_processing():
     return jsonify({
         'job_id': job_id,
         'status': 'processing',
-        'meeting_name': meetings[meeting_id]['name']
+        'meeting_name': meetings[meeting_id]['name'],
+        'audio_file': meetings[meeting_id].get('audio_file', '')
     })
 
 
@@ -276,6 +277,7 @@ def get_result(meeting_id):
         'meeting_id': meeting_id,
         'meeting_name': meeting['name'],
         'created_at': meeting['created_at'],
+        'audio_file': meeting.get('audio_file', ''),
         'transcription': create_sample_transcription(),
         'decisions': create_sample_decisions(),
         'tasks': create_sample_tasks(),
@@ -310,6 +312,21 @@ def get_meetings():
     meetings_list.sort(key=lambda x: x['created_at'], reverse=True)
     
     return jsonify({'meetings': meetings_list})
+
+
+@app.route('/api/meeting/<meeting_id>', methods=['GET'])
+def get_meeting(meeting_id):
+    if meeting_id not in meetings:
+        return jsonify({'error': 'Meeting not found'}), 404
+    
+    meeting = meetings[meeting_id]
+    return jsonify({
+        'id': meeting['id'],
+        'name': meeting['name'],
+        'created_at': meeting['created_at'],
+        'status': meeting.get('status', 'unknown'),
+        'audio_file': meeting.get('audio_file', '')
+    })
 
 
 @app.route('/api/meeting/<meeting_id>', methods=['DELETE'])
@@ -362,7 +379,7 @@ def simulate_processing_step(job_id):
 
 
 # Serve uploaded files
-@app.route('/uploads/')
+@app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 

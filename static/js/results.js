@@ -3,11 +3,16 @@
  * Handles loading and displaying meeting results
  */
 
+// Global audio player for segment playback
+let globalAudioPlayer = null;
+let currentlyPlayingSegmentId = null;
+
 class ResultsManager {
     constructor(meetingId) {
         this.meetingId = meetingId;
         this.data = null;
-        
+        this.audioFile = null;
+
         // Callbacks
         this.onResultsLoaded = null;
         this.onError = null;
@@ -19,13 +24,14 @@ class ResultsManager {
     async loadResults(meetingId = this.meetingId) {
         try {
             const response = await fetch(`/api/result/${meetingId}`);
-            
+
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error || 'Failed to load results');
             }
 
             this.data = await response.json();
+            this.audioFile = this.data.audio_file || null;
 
             if (this.onResultsLoaded) {
                 this.onResultsLoaded(this.data);
@@ -45,6 +51,13 @@ class ResultsManager {
      */
     getResultsData() {
         return this.data;
+    }
+
+    /**
+     * Get audio file path
+     */
+    getAudioFile() {
+        return this.audioFile;
     }
 
     /**
@@ -214,6 +227,78 @@ function downloadFile(content, filename, mimeType) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// Audio player management for segment playback
+function initGlobalAudioPlayer(audioFile) {
+    if (!audioFile) {
+        console.log('No audio file available for playback');
+        return null;
+    }
+
+    if (!globalAudioPlayer) {
+        globalAudioPlayer = new Audio();
+        // audioFile is stored as "uploads/xxx.webm", extract just filename for URL
+        const filename = audioFile.split('/').pop();
+        console.log(filename)
+        globalAudioPlayer.src = '/' + filename;
+        globalAudioPlayer.addEventListener('ended', () => {
+            currentlyPlayingSegmentId = null;
+            updateAllPlayButtons();
+        });
+    }
+    return globalAudioPlayer;
+}
+
+function playSegment(segmentId, start, end) {
+    if (!globalAudioPlayer) {
+        console.log('Audio player not initialized');
+        return;
+    }
+
+    // If same segment is playing, pause it
+    if (currentlyPlayingSegmentId === segmentId && !globalAudioPlayer.paused) {
+        globalAudioPlayer.pause();
+        currentlyPlayingSegmentId = null;
+        updateAllPlayButtons();
+        return;
+    }
+
+    // Stop any currently playing segment
+    globalAudioPlayer.pause();
+    globalAudioPlayer.currentTime = start;
+    currentlyPlayingSegmentId = segmentId;
+
+    // Update button states
+    updateAllPlayButtons();
+
+    // Play and auto-stop at end
+    globalAudioPlayer.play();
+
+    // Set up auto-stop at end time
+    const checkEnd = () => {
+        if (globalAudioPlayer.currentTime >= end) {
+            globalAudioPlayer.pause();
+            currentlyPlayingSegmentId = null;
+            updateAllPlayButtons();
+            globalAudioPlayer.removeEventListener('timeupdate', checkEnd);
+        }
+    };
+
+    globalAudioPlayer.addEventListener('timeupdate', checkEnd);
+}
+
+function updateAllPlayButtons() {
+    document.querySelectorAll('.segment-play-btn').forEach(btn => {
+        const segmentId = btn.getAttribute('data-segment-id');
+        if (segmentId === currentlyPlayingSegmentId && globalAudioPlayer && !globalAudioPlayer.paused) {
+            btn.classList.add('playing');
+            btn.innerHTML = '⏸ Pause';
+        } else {
+            btn.classList.remove('playing');
+            btn.innerHTML = '▶ Play';
+        }
+    });
 }
 
 // Export for use in other scripts

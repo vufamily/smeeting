@@ -37,6 +37,14 @@
 
             <!-- Tab Navigation -->
             <section class="card tabs-section">
+                <!-- Audio Player -->
+                <div class="results-audio-player" id="resultsAudioPlayer" style="display: none;">
+                    <h4>🎧 Full Recording</h4>
+                    <audio id="mainAudioPlayer" controls>
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="transcript">Transcript</button>
                     <button class="tab-btn" data-tab="decisions">Decisions</button>
@@ -91,6 +99,18 @@
             document.getElementById('meetingDate').textContent = formatDate(data.created_at);
             document.getElementById('meetingDate').textContent += ' • ' + data.transcription.length + ' segments';
             
+            // Initialize audio player if audio file available
+            if (data.audio_file) {
+                const audioPlayerSection = document.getElementById('resultsAudioPlayer');
+                const mainAudioPlayer = document.getElementById('mainAudioPlayer');
+                audioPlayerSection.style.display = 'block';
+                console.log(1111, data.audio_file.split('/').pop())
+                mainAudioPlayer.src = '/' + data.audio_file.split('/').pop();
+                
+                // Initialize global audio player for segment playback
+                initGlobalAudioPlayer(data.audio_file);
+            }
+            
             renderTranscript(data.transcription);
             renderDecisions(data.decisions);
             renderTasks(data.tasks);
@@ -120,13 +140,16 @@
                 return;
             }
 
-            container.innerHTML = segments.map(seg => `
-                <div class="transcript-segment">
+            const hasAudio = resultsManager.getAudioFile() !== null;
+            
+            container.innerHTML = segments.map((seg, idx) => `
+                <div class="transcript-segment" id="segment-${idx}">
                     <div class="segment-header">
                         <span class="segment-speaker">${escapeHtml(seg.speaker)}</span>
                         <span class="segment-time">${formatTime(seg.start)} - ${formatTime(seg.end)}</span>
                     </div>
                     <p class="segment-text">${escapeHtml(seg.text)}</p>
+                    <button class="segment-play-btn" data-segment-id="${idx}" data-start="${seg.start}" data-end="${seg.end}" onclick="playSegment('${idx}', ${seg.start}, ${seg.end})" ${!hasAudio ? 'disabled' : ''}>▶ Play</button>
                 </div>
             `).join('');
         }
