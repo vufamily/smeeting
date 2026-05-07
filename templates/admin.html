@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Meeting Assistant</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🎙️</span>
+                    <div>
+                        <h1>Meeting Assistant</h1>
+                        <p class="tagline">Admin Panel</p>
+                    </div>
+                </div>
+                <nav class="header-nav">
+                    <a href="{{ url_for('meeting.index') }}" class="btn btn-secondary">Dashboard</a>
+                    <a href="{{ url_for('meeting.profile') }}" class="btn btn-secondary">Profile</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary">Logout</a>
+                </nav>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- User Management Section -->
+        <section class="card admin-section">
+            <div class="card-header">
+                <h2>👥 User Management</h2>
+                <p>Manage user accounts and permissions</p>
+            </div>
+
+            <!-- Create User Form -->
+            <div class="create-user-form">
+                <h3>Create New User</h3>
+                <form method="POST" action="{{ url_for('admin_create_user') }}" class="form-inline">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="new_username">Username</label>
+                            <input type="text" id="new_username" name="username" placeholder="Username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_email">Email</label>
+                            <input type="email" id="new_email" name="email" placeholder="email@company.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password">Password</label>
+                            <input type="password" id="new_password" name="password" placeholder="Password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_full_name">Full Name</label>
+                            <input type="text" id="new_full_name" name="full_name" placeholder="Full Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="new_role">Role</label>
+                            <select id="new_role" name="role">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-primary">Create User</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Users Table -->
+            <div class="users-table-container">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ user['username'] }}</strong>
+                            </td>
+                            <td>{{ user['email'] or '-' }}</td>
+                            <td>{{ user['full_name'] or '-' }}</td>
+                            <td>
+                                <span class="role-badge role-{{ user['role'] }}">{{ user['role'] }}</span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ user['status'] }}">{{ user['status'] }}</span>
+                            </td>
+                            <td>{{ user['created_at'] }}</td>
+                            <td class="actions-cell">
+                                <!-- Status Actions -->
+                                {% if user['status'] == 'pending' %}
+                                    <a href="{{ url_for('admin_approve_user', user_id=user['id']) }}"
+                                       class="btn btn-small btn-success" title="Approve">
+                                        Approve
+                                    </a>
+                                    <a href="{{ url_for('admin_reject_user', user_id=user['id']) }}"
+                                       class="btn btn-small btn-warning" title="Reject">
+                                        Reject
+                                    </a>
+                                {% elif user['status'] == 'approved' %}
+                                    <a href="{{ url_for('admin_disable_user', user_id=user['id']) }}"
+                                       class="btn btn-small btn-warning" title="Disable">
+                                        Disable
+                                    </a>
+                                {% elif user['status'] == 'disabled' %}
+                                    <a href="{{ url_for('admin_enable_user', user_id=user['id']) }}"
+                                       class="btn btn-small btn-success" title="Enable">
+                                        Enable
+                                    </a>
+                                {% elif user['status'] == 'rejected' %}
+                                    <a href="{{ url_for('admin_enable_user', user_id=user['id']) }}"
+                                       class="btn btn-small btn-success" title="Approve">
+                                        Approve
+                                    </a>
+                                {% endif %}
+
+                                <!-- Edit Button -->
+                                <button class="btn btn-small btn-secondary"
+                                        onclick="showEditModal({{ user['id'] }}, '{{ user['username'] }}', '{{ user['email'] }}', '{{ user['full_name'] or '' }}', '{{ user['role'] }}')">
+                                    Edit
+                                </button>
+
+                                <!-- Password Reset Button -->
+                                <button class="btn btn-small btn-secondary"
+                                        onclick="showPasswordResetModal({{ user['id'] }}, '{{ user['username'] }}')">
+                                    Reset Password
+                                </button>
+
+                                <!-- Delete Button -->
+                                <a href="{{ url_for('admin_delete_user', user_id=user['id']) }}"
+                                   class="btn btn-small btn-danger"
+                                   onclick="return confirm('Are you sure you want to delete user \'{{ user['username'] }}\'?');">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if not users %}
+                <div class="empty-state">
+                    <p>No users found.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit User</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form method="POST" id="editForm">
+                <input type="hidden" id="edit_user_id" name="user_id">
+                <div class="form-group">
+                    <label for="edit_username">Username</label>
+                    <input type="text" id="edit_username" readonly class="input-readonly">
+                </div>
+                <div class="form-group">
+                    <label for="edit_email">Email</label>
+                    <input type="email" id="edit_email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_full_name">Full Name</label>
+                    <input type="text" id="edit_full_name" name="full_name">
+                </div>
+                <div class="form-group">
+                    <label for="edit_role">Role</label>
+                    <select id="edit_role" name="role">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div id="passwordResetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <button class="modal-close" onclick="closePasswordResetModal()">&times;</button>
+            </div>
+            <form method="POST" id="passwordResetForm">
+                <input type="hidden" id="password_user_id" name="user_id">
+                <p>Enter a new password for user: <strong id="password_username"></strong></p>
+                <div class="form-group">
+                    <label for="new_password_field">New Password</label>
+                    <input type="password" id="new_password_field" name="new_password"
+                           placeholder="At least 6 characters" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePasswordResetModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script>
+        function showEditModal(userId, username, email, fullName, role) {
+            document.getElementById('edit_user_id').value = userId;
+            document.getElementById('edit_username').value = username;
+            document.getElementById('edit_email').value = email || '';
+            document.getElementById('edit_full_name').value = fullName || '';
+            document.getElementById('edit_role').value = role;
+            document.getElementById('editForm').action = '/admin/users/' + userId + '/update';
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function showPasswordResetModal(userId, username) {
+            document.getElementById('password_user_id').value = userId;
+            document.getElementById('password_username').textContent = username;
+            document.getElementById('passwordResetForm').action = '/admin/users/' + userId + '/reset-password';
+            document.getElementById('passwordResetModal').style.display = 'flex';
+        }
+
+        function closePasswordResetModal() {
+            document.getElementById('passwordResetModal').style.display = 'none';
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const editModal = document.getElementById('editModal');
+            const passwordModal = document.getElementById('passwordResetModal');
+            if (event.target === editModal) closeEditModal();
+            if (event.target === passwordModal) closePasswordResetModal();
+        };
+    </script>
+</body>
+</html>
